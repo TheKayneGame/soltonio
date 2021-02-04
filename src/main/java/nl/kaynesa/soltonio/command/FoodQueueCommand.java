@@ -28,6 +28,7 @@ public class FoodQueueCommand {
         event.getDispatcher().register(
                 literal(name)
                         .then(withPlayerArgumentOrSender(literal("stats"), FoodQueueCommand::showQueueStats))
+                        .then(withPlayerArgumentOrSender(literal("clear"), FoodQueueCommand::clearQueue))
         );
     }
 
@@ -54,9 +55,15 @@ public class FoodQueueCommand {
 
     static int showQueueStats(CommandContext<CommandSource> context, PlayerEntity target) {
         ProgressInfo progressInfo = FoodQueue.get(target).getProgressInfo();
-        String temp = String.format("Queue Nutrition: %d\nAdded Hearts: %d\nQueue Distinct Food Count: %d\nVariety Modifier: %d%%",
-                progressInfo.getQueueNutrition(), progressInfo.getAddedHearts(), progressInfo.getQueueDistinctFoodCount(), (int) progressInfo.getVarietyModifier() * 100); // TODO: 31-Jan-21 Remof
+        String temp = String.format("Queue Nutrition: %f\nQueue Saturation: %d\nAdded Health: %d\nQueue Distinct Food Count: %d\nVariety Modifier: %d%%",
+                progressInfo.getQueueNutrition(),progressInfo.getAddedHearts(), progressInfo.getAddedHearts(), progressInfo.getQueueDistinctFoodCount(), (int) progressInfo.getVarietyModifier() * 100); // TODO: 31-Jan-21 Remof
         sendFeedback(context.getSource(), new StringTextComponent(temp));
+        return 0;
+    }
+
+    static int clearQueue(CommandContext<CommandSource> context, PlayerEntity target){
+        FoodQueue.get(target).clearQueue();
+        sendFeedback(context.getSource(), new StringTextComponent("Cleared Queue"));
         return 0;
     }
 }

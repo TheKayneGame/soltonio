@@ -4,7 +4,6 @@ import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.entity.ai.attributes.ModifiableAttributeInstance;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Food;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -45,7 +44,7 @@ public final class MaxHealthHandle {
 
         AttributeModifier modifier = new AttributeModifier(
                 HEALTH_MODIFIER_ID,
-                "Health Gained from Trying New Foods",
+                "Health Gained from food variety",
                 totalHealthModifier,
                 AttributeModifier.Operation.ADDITION
         );
@@ -67,11 +66,12 @@ public final class MaxHealthHandle {
         attribute.removeModifier(modifier);
         attribute.applyPersistentModifier(modifier);
 
-        float newHealth = player.getHealth() * player.getMaxHealth() / oldMax;
+        //float newHealth = player.getHealth() * player.getMaxHealth() / oldMax;
         // because apparently it doesn't update unless changed
-        player.setHealth(1f);
+
+        //player.setHealth(1f);
         // adjust current health proportionally to increase in max health
-        player.setHealth(newHealth);
+        //player.setHealth(newHealth);
     }
 
     private static ModifiableAttributeInstance maxHealthAttribute(PlayerEntity player) {
