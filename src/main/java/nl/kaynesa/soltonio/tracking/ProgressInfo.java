@@ -4,17 +4,16 @@ import nl.kaynesa.soltonio.SOLTonioConfig;
 
 public class ProgressInfo {
 
-    private final int queueNutrition;
+    private final double queueNutrition;
     private final int addedHearts;
     private final int queueDistinctFoodCount;
     private final float varietyModifier;
 
     ProgressInfo(FoodQueue foodQueue) {
-        queueNutrition = foodQueue.getQueueNutritionValue();
+        queueNutrition = foodQueue.getQueueNutritionValue() * 0.9 - foodQueue.getTopQueueDistinctFoodCount();// Okay hear me out, the 0.9 is something we calculated using a brute force method
         queueDistinctFoodCount = foodQueue.getQueueDistinctFoodCount();
         varietyModifier = (float) Math.min((float) (queueDistinctFoodCount - 1) / (SOLTonioConfig.getMinFoodInQueueForFullBonus() - 1), 1);
-        addedHearts = (int) (queueNutrition / SOLTonioConfig.queueNutritionPerHeart() * varietyModifier);
-
+        addedHearts = (int) (queueNutrition / SOLTonioConfig.getQueueNutritionPerHeart() * varietyModifier);
 
     }
 
@@ -26,7 +25,7 @@ public class ProgressInfo {
         return addedHearts >= SOLTonioConfig.getMaxAddedHeartsFromFood();
     }
 
-    public int getQueueNutrition() {
+    public double getQueueNutrition() {
         return queueNutrition;
     }
 

@@ -67,7 +67,7 @@ public final class SOLTonioConfig {
         return SERVER.baseHearts.get();
     }
 
-    public static int queueNutritionPerHeart() {
+    public static double getQueueNutritionPerHeart() {
         return SERVER.queueNutritionPerHeart.get();
     }
 
@@ -77,6 +77,10 @@ public final class SOLTonioConfig {
 
     public static int getMinFoodInQueueForFullBonus() {
         return SERVER.minFoodInQueueForFullBonus.get();
+    }
+
+    public static int getMaxDistinctThatCounts() {
+        return SERVER.maxDistinctThatCounts.get();
     }
 
     public static List<String> getBlacklist() {
@@ -105,9 +109,10 @@ public final class SOLTonioConfig {
 
     public static class Server {
         public final ForgeConfigSpec.IntValue baseHearts;
-        public final ForgeConfigSpec.IntValue queueNutritionPerHeart;
+        public final ForgeConfigSpec.DoubleValue queueNutritionPerHeart;
         public final ForgeConfigSpec.IntValue maxAddedHeartsFromFood;
         public final ForgeConfigSpec.IntValue minFoodInQueueForFullBonus;
+        public final ForgeConfigSpec.IntValue maxDistinctThatCounts;
 
         public final ForgeConfigSpec.ConfigValue<List<? extends String>> blacklist;
         public final ForgeConfigSpec.ConfigValue<List<? extends String>> whitelist;
@@ -118,7 +123,7 @@ public final class SOLTonioConfig {
         public final ForgeConfigSpec.IntValue foodQueueSize;
 
         Server(ForgeConfigSpec.Builder builder) {
-            builder.push("milestones");
+            builder.push("Balancing");
 
             baseHearts = builder
                     .translation(localizationPath("base_hearts"))
@@ -128,7 +133,7 @@ public final class SOLTonioConfig {
             queueNutritionPerHeart = builder
                     .translation(localizationPath("queue_nutrition_per_heart"))
                     .comment("Amount of nutrition needed per heart")
-                    .defineInRange("queueNutritionPerHeart", 2, 0, 1000);
+                    .defineInRange("queueNutritionPerHeart", 15d, 0, 1000);
 
             maxAddedHeartsFromFood = builder
                     .translation(localizationPath("max_added_hearts_from_food"))
@@ -138,7 +143,12 @@ public final class SOLTonioConfig {
             minFoodInQueueForFullBonus = builder
                     .translation(localizationPath("min_food_in_queue_for_full_bonus"))
                     .comment("Number of distinct food required for maximum bonus potential")
-                    .defineInRange("minFoodInQueueForFullBonus", 4, 0,1000);
+                    .defineInRange("minFoodInQueueForFullBonus", 8, 0,1000);
+
+            maxDistinctThatCounts = builder
+                    .translation(localizationPath("max_distinct_that_counts"))
+                    .comment("First number of distinct food that counts for the health bonus")
+                    .defineInRange("maxDistinctThatCounts", 10, 0,1000);
 
             builder.pop();
             builder.push("filtering");
@@ -158,11 +168,6 @@ public final class SOLTonioConfig {
                     .comment("The minimum hunger value foods need to provide in order to count for milestones, in half drumsticks.")
                     .defineInRange("minimumFoodValue", 1, 0, 1000);
 
-            foodQueueSize = builder
-                    .translation(localizationPath("food_queue_size"))
-                    .comment("s")
-                    .defineInRange("foodQueueSize", 8, 1,100 );
-
             builder.pop();
             builder.push("miscellaneous");
 
@@ -176,16 +181,13 @@ public final class SOLTonioConfig {
                     .comment("If true, eating foods outside of survival mode (e.g. creative/adventure) is not tracked and thus does not contribute towards progression.")
                     .define("limitProgressionToSurvival", false);
 
+            foodQueueSize = builder
+                    .translation(localizationPath("food_queue_size"))
+                    .comment("Set buffer size of eaten meals")
+                    .defineInRange("foodQueueSize", 32, 1,100 );
+
             builder.pop();
         }
-    }
-
-    public static boolean shouldPlayMilestoneSounds() {
-        return CLIENT.shouldPlayMilestoneSounds.get();
-    }
-
-    public static boolean shouldSpawnMilestoneParticles() {
-        return CLIENT.shouldSpawnMilestoneParticles.get();
     }
 
     public static boolean isFoodTooltipEnabled() {

@@ -28,10 +28,10 @@ public class TooltipHandle {
         if (player == null) return;
 
         Item food = event.getItemStack().getItem();
-        if(!food.isFood()) return;
+        if (!food.isFood()) return;
 
         FoodQueue foodQueue = FoodQueue.get(player);
-        int recentlyEaten= foodQueue.recentlyEaten(food);
+        int recentlyEaten = foodQueue.recentlyEaten(food);
         boolean isAllowed = SOLTonioConfig.isAllowed(food);
         boolean isHearty = SOLTonioConfig.isHearty(food);
 
@@ -40,15 +40,24 @@ public class TooltipHandle {
         if (!isAllowed) {
             tooltip.add(styledText("Tasty, but this ain't it chief", TextFormatting.DARK_RED)); //// TODO: 01-Feb-21 Localisation
         } else if (isHearty) {
-            tooltip.add(styledText(String.format("Eaten %d meals ago", recentlyEaten), TextFormatting.BLUE));
+            if (recentlyEaten < 0) {
+                tooltip.add(styledText("Not eaten recently", TextFormatting.BLUE));
+            } else if (recentlyEaten < 1) {
+                tooltip.add(styledText("Just eaten", TextFormatting.BLUE));
+            } else {
+                tooltip.add(styledText(String.format("Eaten %d meals ago", recentlyEaten), TextFormatting.BLUE));
+            }
         } else {
             tooltip.add(styledText("Doesn't look too nutritious", TextFormatting.RED));
         }
+
+        //tooltip.add(styledText(String.format("Foodval: %d Saturation: %f", Objects.requireNonNull(food.getFood()).getHealing(), food.getFood().getSaturation()),TextFormatting.GRAY));//// TODO: 02-Feb-21 remof
     }
 
     private static ITextComponent styledText(String text, TextFormatting format) {
         return new StringTextComponent(text).modifyStyle(style -> style.applyFormatting(format));
     }
 
-    private TooltipHandle() {}
+    private TooltipHandle() {
+    }
 }

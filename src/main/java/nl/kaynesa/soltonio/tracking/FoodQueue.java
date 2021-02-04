@@ -14,6 +14,7 @@ import nl.kaynesa.soltonio.SOLTonioConfig;
 import nl.kaynesa.soltonio.api.FoodCapability;
 import nl.kaynesa.soltonio.api.SOLTonioAPI;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
@@ -33,6 +34,7 @@ public final class FoodQueue implements FoodCapability {
 
     private final LazyOptional<FoodQueue> capabilityOptional = LazyOptional.of(() -> this);
 
+    @Nonnull
     @Override
     public <T> LazyOptional<T> getCapability(Capability<T> capability, @Nullable Direction side) {
         return capability == SOLTonioAPI.foodCapability ? capabilityOptional.cast() : LazyOptional.empty();
@@ -71,7 +73,7 @@ public final class FoodQueue implements FoodCapability {
 
     public boolean queueFood(Item food) {
         if (isQueueFull()) {
-            foodQueue.remove();
+            queueMakeSpaceForOne();
         }
         boolean wasAdded = foodQueue.add(new FoodInstance(food)) && SOLTonioConfig.shouldCount(food);
         invalidateProgressInfo();
@@ -82,12 +84,53 @@ public final class FoodQueue implements FoodCapability {
         return foodQueue.size() > SOLTonioConfig.getFoodQueueSize();
     }
 
-    public int getQueueNutritionValue() {
-        return foodQueue.isEmpty() ? 0 : foodQueue.stream().distinct().map(foodInstance -> Objects.requireNonNull(foodInstance.item.getFood()).getHealing()).reduce(Integer::sum).get();
+    private void queueMakeSpaceForOne() {
+        while (isQueueFull()){
+            foodQueue.remove();
+        }
+
+    }
+
+    @SuppressWarnings("OptionalGetWithoutIsPresent")
+    public int getQueueHealingValue() {
+        return foodQueue.isEmpty() ? 0 :
+                foodQueue.stream().distinct().map(foodInstance -> Objects.requireNonNull(foodInstance.item.getFood())
+                .getHealing()).reduce(Integer::sum).get();
+    }
+
+    @SuppressWarnings("OptionalGetWithoutIsPresent")
+    public float getQueueSaturationValue() {
+        return foodQueue.isEmpty() ? 0 :
+                foodQueue.stream().distinct().map(foodInstance -> Objects.requireNonNull(foodInstance.item.getFood())
+                .getSaturation()).reduce(Float::sum).get();
+    }
+
+    @SuppressWarnings("OptionalGetWithoutIsPresent")
+    public float getQueueNutritionValue() {
+        return foodQueue.isEmpty() ? 0 :
+                foodQueue.stream().distinct()
+                        .map(foodInstance -> ((Objects.requireNonNull(foodInstance.item.getFood()).getSaturation() + 1) * Objects.requireNonNull(foodInstance.item.getFood()).getHealing()))
+                        .sorted(Comparator.reverseOrder()).limit(SOLTonioConfig.getMaxDistinctThatCounts())
+                        .reduce(Float::sum).get();
+    }
+
+    public double getQueueNutritionAverage() {
+        final ArrayList<FoodInstance> queueList = new ArrayList<>(foodQueue);
+        Collections.reverse(queueList);
+
+        return foodQueue.isEmpty() ? 0 :
+                queueList.stream().distinct()
+                        .mapToDouble(foodInstance -> Objects.requireNonNull(foodInstance.item.getFood()).getHealing())
+                        .limit(SOLTonioConfig.getMaxDistinctThatCounts()).average().orElse(Double.NaN);
     }
 
     public int getQueueDistinctFoodCount() {
         return foodQueue.isEmpty() ? 0 : (int) foodQueue.stream().distinct().count();
+    }
+
+    public int getTopQueueDistinctFoodCount() {
+        return foodQueue.isEmpty() ? 0 :
+                (int)foodQueue.stream().distinct().limit(SOLTonioConfig.getMaxDistinctThatCounts()).count();
     }
 
     public void clearQueue() {
@@ -97,14 +140,13 @@ public final class FoodQueue implements FoodCapability {
 
     public int recentlyEaten(Item food) {
         if (!food.isFood()) return -2;
-        final ArrayList j = new ArrayList(foodQueue);
+        final ArrayList<FoodInstance> j = new ArrayList<>(foodQueue);
         Collections.reverse(j);
-        int i = j.indexOf(new FoodInstance(food));
-        return i;
+        return j.indexOf(new FoodInstance(food));
     }
 
     public Queue<FoodInstance> getFoodQueue() {
-        return new LinkedList<FoodInstance>(foodQueue);
+        return new LinkedList<>(foodQueue);
     }
 
     public ProgressInfo getProgressInfo() {
