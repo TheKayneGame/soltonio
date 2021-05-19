@@ -21,7 +21,7 @@ import java.util.List;
 public class TooltipHandle {
     @SubscribeEvent
     public static void onItemTooltip(ItemTooltipEvent event) {
-        System.out.println("Tooltip");
+        // System.out.println("Tooltip");
         if (!SOLTonioConfig.isFoodTooltipEnabled()) return;
 
         PlayerEntity player = event.getPlayer();
